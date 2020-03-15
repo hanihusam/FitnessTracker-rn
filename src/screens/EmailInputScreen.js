@@ -26,25 +26,22 @@ const EmailInputScreen = ({navigation: {navigate}}) => {
       enabled
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 84}>
       <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.headerContainer}>
+          <Icon name="md-fitness" size={80} color="#1eb2a6" />
+          <Text style={{textAlign: 'center'}}>
+            What is your e-mail address?
+          </Text>
+        </View>
         <Formik
           initialValues={{
             email: '',
           }}
           validationSchema={EmailFormSchema}
-          onSubmit={(values, actions) => {
-            setTimeout(() => {
-              alert(JSON.stringify(values, null, 2));
-              actions.setSubmitting(false);
-            }, 1000);
+          onSubmit={values => {
+            navigate('PasswordInput', {email: values.email});
           }}>
-          {props => (
+          {({errors, isValid, dirty, handleSubmit, handleChange}) => (
             <>
-              <View style={styles.headerContainer}>
-                <Icon name="md-fitness" size={80} color="#1eb2a6" />
-                <Text style={{textAlign: 'center'}}>
-                  What is your e-mail address?
-                </Text>
-              </View>
               <View style={styles.wrapperInput}>
                 <View style={styles.input}>
                   <Icon
@@ -61,16 +58,18 @@ const EmailInputScreen = ({navigation: {navigate}}) => {
                     autoCorrect={false}
                     keyboardType="email-address"
                     returnKeyType="next"
-                    onChangeText={props.handleChange('email')}
+                    onChangeText={handleChange('email')}
                   />
-                  {props.errors.email && (
-                    <Text style={{color: 'red'}}>{props.errors.email}</Text>
-                  )}
                 </View>
+                {errors.email ? (
+                  <Text style={{color: 'red', paddingLeft: 10}}>
+                    {errors.email}
+                  </Text>
+                ) : null}
               </View>
               <View style={styles.btnWrapper}>
                 <Button
-                  disabled={!(props.isValid && props.dirty)}
+                  disabled={!(isValid && dirty)}
                   title="Continue"
                   loading={false}
                   loadingProps={{size: 'small', color: 'white'}}
@@ -80,7 +79,7 @@ const EmailInputScreen = ({navigation: {navigate}}) => {
                   }}
                   titleStyle={{fontWeight: 'bold', fontSize: 14}}
                   containerStyle={{marginVertical: 10, height: 50, width: 300}}
-                  onPress={props.handleSubmit}
+                  onPress={handleSubmit}
                   underlayColor="transparent"
                 />
               </View>

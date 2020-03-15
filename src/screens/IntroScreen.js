@@ -7,7 +7,7 @@ const IntroScreen = ({navigation: {navigate}}) => {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Icon name="fitness" size={80} color="#1eb2a6" />
+        <Icon name="md-fitness" size={80} color="#1eb2a6" />
         <Text style={styles.h4}>Welcome to Daily Workout</Text>
         <Text style={styles.h5}>
           The best app for track fitness workout and meal planner

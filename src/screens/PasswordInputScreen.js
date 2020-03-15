@@ -7,15 +7,37 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from 'react-native';
+import {Formik} from 'formik';
+import * as Yup from 'yup';
+import firebase from '@react-native-firebase/app';
+import '@react-native-firebase/auth';
 import {Button} from 'react-native-elements';
 import {BarPasswordStrengthDisplay} from 'react-native-password-strength-meter';
 import Icon from 'react-native-vector-icons/dist/Ionicons';
 
-const PasswordInputScreen = ({navigation: {navigate}}) => {
-  const [password, setPassword] = useState('');
+const SignupSchema = Yup.object({
+  password: Yup.string()
+    .required('Password is required')
+    .min(6, 'Password must be at least 6 characters'),
+  passwordConfirm: Yup.string()
+    .oneOf([Yup.ref('password'), null], 'Passwords must match')
+    .required('Password confirm is required'),
+});
 
-  const onChange = val => {
-    setPassword(val);
+const PasswordInputScreen = ({route, navigation}) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const signUp = values => {
+    setLoading(true);
+    const email = route.params.email;
+    firebase
+      .auth()
+      .createUserWithEmailAndPassword(email, values.password)
+      .then(user => {
+        setUser(user);
+        alert('Registration success');
+      });
   };
 
   return (
@@ -31,74 +53,89 @@ const PasswordInputScreen = ({navigation: {navigate}}) => {
             Now let's setup your password
           </Text>
         </View>
-        <View style={styles.wrapperInput}>
-          <View style={styles.input}>
-            <Icon
-              style={{marginLeft: 10}}
-              name="ios-lock"
-              color="#a1e6e3"
-              size={25}
-            />
-            <TextInput
-              style={{marginLeft: 10, width: '100%'}}
-              placeholderTextColor="grey"
-              placeholder="Password"
-              autoCapitalize="none"
-              secureTextEntry={true}
-              autoCorrect={false}
-              keyboardType="default"
-              returnKeyType="next"
-              onChangeText={onChange}
-            />
-          </View>
-          <BarPasswordStrengthDisplay
-            width={300}
-            barContainerStyle={{alignSelf: 'center'}}
-            password={password}
-          />
-        </View>
-        {/* <Input
-          leftIcon={
-            <Icon
-              name="email-outline"
-              color="rgba(110, 120, 170, 1)"
-              size={25}
-            />
-          }
-          placeholder="enter your Email"
-          inputContainerStyle={{
-            borderWidth: 1,
-            borderColor: "white",
-            borderLeftWidth: 0,
-            height: 50,
-            backgroundColor: "white",
-            marginBottom: 20
+        <Formik
+          initialValues={{password: '', passwordConfirm: ''}}
+          onSubmit={(values, {setSubmitting}) => {
+            signUp(values, navigation);
+            setSubmitting(false);
           }}
-          placeholderTextColor="grey"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          returnKeyType="next"
-          // ref={input => (email2Input = input)}
-          onSubmitEditing={() => {
-            this.password2Input.focus();
-          }}
-        /> */}
-        <View style={styles.btnWrapper}>
-          <Button
-            title="Continue"
-            loading={false}
-            loadingProps={{size: 'small', color: 'white'}}
-            buttonStyle={{
-              backgroundColor: '#1eb2a6',
-              borderRadius: 5,
-            }}
-            titleStyle={{fontWeight: 'bold', fontSize: 14}}
-            containerStyle={{marginVertical: 10, height: 50, width: 300}}
-            onPress={() => navigate('PasswordInput')}
-            underlayColor="transparent"
-          />
-        </View>
+          validationSchema={SignupSchema}>
+          {({errors, isValid, dirty, handleSubmit, handleChange, values}) => (
+            <>
+              <View style={styles.wrapperInput}>
+                <View style={styles.input}>
+                  <Icon
+                    style={{marginLeft: 10}}
+                    name="ios-lock"
+                    color="#a1e6e3"
+                    size={25}
+                  />
+                  <TextInput
+                    style={{marginLeft: 10, width: '100%'}}
+                    placeholderTextColor="grey"
+                    placeholder="Password"
+                    autoCapitalize="none"
+                    secureTextEntry={true}
+                    autoCorrect={false}
+                    keyboardType="default"
+                    returnKeyType="next"
+                    onChangeText={handleChange('password')}
+                  />
+                </View>
+                <View style={styles.input}>
+                  <Icon
+                    style={{marginLeft: 10}}
+                    name="ios-lock"
+                    color="#a1e6e3"
+                    size={25}
+                  />
+                  <TextInput
+                    style={{marginLeft: 10, width: '100%'}}
+                    placeholderTextColor="grey"
+                    placeholder="Confirm Password"
+                    autoCapitalize="none"
+                    secureTextEntry={true}
+                    autoCorrect={false}
+                    keyboardType="default"
+                    returnKeyType="next"
+                    onChangeText={handleChange('passwordConfirm')}
+                  />
+                </View>
+                {errors.password ? (
+                  <Text style={{color: 'red', paddingLeft: 10}}>
+                    {errors.password}
+                  </Text>
+                ) : null}
+                {errors.passwordConfirm ? (
+                  <Text style={{color: 'red', paddingLeft: 10}}>
+                    {errors.passwordConfirm}
+                  </Text>
+                ) : null}
+                <BarPasswordStrengthDisplay
+                  width={300}
+                  barContainerStyle={{alignSelf: 'center'}}
+                  password={values.password}
+                />
+              </View>
+              <View style={styles.btnWrapper}>
+                <Button
+                  disabled={!(isValid && dirty)}
+                  title="Continue"
+                  loading={false}
+                  loadingProps={{size: 'small', color: 'white'}}
+                  buttonStyle={{
+                    backgroundColor: '#1eb2a6',
+                    borderRadius: 5,
+                  }}
+                  titleStyle={{fontWeight: 'bold', fontSize: 14}}
+                  containerStyle={{marginVertical: 10, height: 50, width: 300}}
+                  onPress={handleSubmit}
+                  underlayColor="transparent"
+                />
+              </View>
+            </>
+          )}
+        </Formik>
       </ScrollView>
     </KeyboardAvoidingView>
   );
