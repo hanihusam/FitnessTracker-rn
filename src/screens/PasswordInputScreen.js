@@ -37,6 +37,10 @@ const PasswordInputScreen = ({route, navigation}) => {
       .then(user => {
         setUser(user);
         alert('Registration success');
+
+        setTimeout(() => {
+          navigation.navigate('Intro');
+        }, 2000);
       });
   };
 
@@ -56,7 +60,7 @@ const PasswordInputScreen = ({route, navigation}) => {
         <Formik
           initialValues={{password: '', passwordConfirm: ''}}
           onSubmit={(values, {setSubmitting}) => {
-            signUp(values, navigation);
+            signUp(values);
             setSubmitting(false);
           }}
           validationSchema={SignupSchema}>

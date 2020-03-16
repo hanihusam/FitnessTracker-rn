@@ -12,6 +12,7 @@ import {
 import {Formik} from 'formik';
 import * as Yup from 'yup';
 import firebase from '@react-native-firebase/app';
+import {GoogleSignin} from '@react-native-community/google-signin';
 import {LoginManager, AccessToken} from 'react-native-fbsdk';
 import '@react-native-firebase/auth';
 import {Button, SocialIcon} from 'react-native-elements';
@@ -28,6 +29,32 @@ const LoginSchema = Yup.object().shape({
 
 const LoginScreen = ({navigation: {navigate}}) => {
   const [user, setUser] = useState(null);
+
+  const googleLogin = async () => {
+    try {
+      // add any configuration settings here:
+      await GoogleSignin.configure();
+
+      const data = await GoogleSignin.signIn();
+
+      // create a new firebase credential with the token
+      const credential = firebase.auth.GoogleAuthProvider.credential(
+        data.idToken,
+        data.accessToken,
+      );
+      // login with credential
+      const firebaseUserCredential = await firebase
+        .auth()
+        .signInWithCredential(credential);
+
+      setTimeout(() => {
+        setUser(null);
+        navigate('Home');
+      }, 2000);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const login = values => {
     firebase
@@ -87,7 +114,7 @@ const LoginScreen = ({navigation: {navigate}}) => {
             setSubmitting(false);
           }}
           validationSchema={LoginSchema}>
-          {({handleChange, errors, handleSubmit, isValid, dirty}) => (
+          {({handleChange, errors, handleSubmit, isValid, dirty, touched}) => (
             <>
               <View style={styles.wrapper}>
                 <View style={styles.input}>
@@ -108,7 +135,7 @@ const LoginScreen = ({navigation: {navigate}}) => {
                     returnKeyType="next"
                   />
                 </View>
-                {errors.email ? (
+                {errors.email && touched.email ? (
                   <Text
                     style={{color: 'red', paddingLeft: 10, paddingBottom: 20}}>
                     {errors.email}
@@ -133,7 +160,7 @@ const LoginScreen = ({navigation: {navigate}}) => {
                     returnKeyType="next"
                   />
                 </View>
-                {errors.password ? (
+                {errors.password && touched.password ? (
                   <Text
                     style={{color: 'red', paddingLeft: 10, paddingBottom: 20}}>
                     {errors.password}
@@ -146,7 +173,9 @@ const LoginScreen = ({navigation: {navigate}}) => {
                   <TouchableOpacity onPress={() => facebookLogin()}>
                     <SocialIcon type="facebook" light />
                   </TouchableOpacity>
-                  <SocialIcon type="google" light />
+                  <TouchableOpacity onPress={() => googleLogin()}>
+                    <SocialIcon type="google" light />
+                  </TouchableOpacity>
                 </View>
                 <Button
                   disabled={!(isValid && dirty)}
